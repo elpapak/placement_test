@@ -120,6 +120,53 @@
     padding:18px 20px;
     margin-bottom:14px;
   }
+  .writing-box{
+    width:100%;
+    min-height:140px;
+    font-family:inherit;
+    font-size:15.5px;
+    line-height:1.6;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:12px 14px;
+    resize:vertical;
+  }
+  .writing-box:focus{outline:none;border-color:var(--accent-soft);}
+  .wordcount{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:right;
+    margin-top:6px;
+  }
+  .writing-review{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--accent-soft);
+    padding:14px 18px;
+    margin-bottom:12px;
+    font-size:14.5px;
+    white-space:pre-wrap;
+  }
+  .writing-review .wtitle{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--accent);
+    margin-bottom:8px;
+    display:block;
+  }
+  .writing-review .wprompt{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+    font-style:italic;
+  }
+  .writing-review .wempty{
+    color:var(--ink-soft);
+    font-style:italic;
+  }
   .qnum{
     font-size:12px;
     color:var(--ink-soft);
@@ -209,12 +256,14 @@
   .score-hero .outof{font-size:15px;color:var(--ink-soft);}
   .score-hero .level{
     margin-top:14px;
-    font-size:16px;
+    font-size:15px;
     display:inline-block;
-    padding:6px 14px;
+    padding:8px 16px;
     border:1px solid var(--accent-soft);
-    border-radius:20px;
+    border-radius:16px;
     color:var(--accent);
+    max-width:90%;
+    line-height:1.4;
   }
   table.breakdown{
     width:100%;
@@ -374,7 +423,7 @@ const Q = [
 {n:80,page:6,text:"I saw Mrs Jones yesterday. She was surprised and asked me what ____ in London.",options:["are you doing","am I doing","I was doing","if I'm doing"],answer:2},
 {n:81,page:6,text:"I wish you ____ before you speak.",options:["'d think","'ll think","think","'re thinking"],answer:0},
 
-{n:82,page:7,text:"A: ____\nB: Oh, dear. I'd love to, but this weekend I'm so busy.",options:["Are you doing anything next Saturday afternoon?","I was wondering if we could meet next Saturday morning.","What are you doing next Sunday evening?","I'm afraid I've already got something to do on Sunday."],answer:0},
+{n:82,page:7,text:"A: ____\nB: Oh, dear. I'd love to, but this weekend I'm so busy.",options:["Are you doing anything next Saturday afternoon?","I was wondering if we could meet next Saturday morning.","What are you doing next Sunday evening?","I'm afraid I've already got something to do on Sunday."],answer:1},
 {n:83,page:7,text:"A: I failed my driving test again.\nB: ____",options:["Absolutely.","That's too bad.","Fair enough.","That's amazing!"],answer:1},
 {n:84,page:7,text:"A: I think you must have made a mistake. I'm pretty sure I gave you a £20 note.\nB: ____",options:["Thanks. That's for you.","Yes, I'm afraid it is. But it doesn't include tax.","Sure. Tell me your account number.","Oh, did you? Er… sorry about that."],answer:3},
 {n:85,page:7,text:"A: What time will we arrive?\nB: ____",options:["Presumably, the others will be late.","Generally, on time.","Hopefully, in the next hour.","Obviously, we're late."],answer:2},
@@ -396,11 +445,44 @@ const Q = [
 {n:100,page:8,passage:"neighbours",text:"Andrew said that ____ remembered each other.",options:["it would have been amazing if they had","he wasn't shocked that they","he was surprised that they","he hadn't realised that they"],answer:2},
 ];
 
-const TOTAL_PAGES = 8;
+/* ---------------- RESULTS AUTO-COLLECTION ----------------
+   To automatically collect every student's results in a Google Sheet:
+   1. Create a new Google Sheet.
+   2. In the Sheet, go to Extensions > Apps Script, paste the script
+      from the accompanying "google_apps_script.gs" file, and save.
+   3. Click Deploy > New deployment > select type "Web app".
+      - Execute as: Me
+      - Who has access: Anyone
+   4. Click Deploy, authorize it, and copy the Web app URL it gives you.
+   5. Paste that URL below, between the quotes.
+   Leave it blank ("") to disable auto-collection — results will still
+   work fine with the Download/Copy buttons on the results screen.
+------------------------------------------------------------- */
+const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/XXXXXXXX/exec";
+
+const WRITING_TASKS = [
+  {
+    id: "w1",
+    label: "Task 1 · About you",
+    prompt: "Write about yourself. Include your name, where you're from, your job or studies, your family, and what you like to do in your free time.",
+    suggested: "40–60 words"
+  },
+  {
+    id: "w2",
+    label: "Task 2 · A story",
+    prompt: "Write a short email or message to a friend about your last holiday or a memorable weekend. What did you do? Who were you with? How did you feel?",
+    suggested: "80–120 words"
+  }
+];
+
+const TOTAL_PAGES = 9; // pages 1–8 are multiple choice, page 9 is writing
 const answers = new Array(Q.length).fill(null);
+const writingAnswers = {};
+WRITING_TASKS.forEach(t => writingAnswers[t.id] = "");
 let currentPage = 1;
 let studentName = "";
 let submitted = false;
+let resultsSent = false;
 
 /* ---------------- RENDER ---------------- */
 const app = document.getElementById('app');
@@ -417,13 +499,22 @@ function renderStem(text){
 function escapeHtml(s){
   return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
+function wordCount(s){
+  return (s.trim().match(/\S+/g) || []).length;
+}
 
 function renderProgress(){
   let tabs = "";
   for(let p=1;p<=TOTAL_PAGES;p++){
-    const qs = pageQuestions(p);
-    const answeredCount = qs.filter(q => answers[Q.indexOf(q)] !== null).length;
-    const pct = Math.round((answeredCount/qs.length)*100);
+    let pct;
+    if(p === 9){
+      const filled = WRITING_TASKS.filter(t => writingAnswers[t.id].trim().length > 0).length;
+      pct = Math.round((filled / WRITING_TASKS.length) * 100);
+    } else {
+      const qs = pageQuestions(p);
+      const answeredCount = qs.filter(q => answers[Q.indexOf(q)] !== null).length;
+      pct = Math.round((answeredCount/qs.length)*100);
+    }
     tabs += `<div class="tab ${p===currentPage?'current':''}"><div class="fill" style="width:${pct}%"></div></div>`;
   }
   return `<div class="progress-ribbon">${tabs}</div>
@@ -438,9 +529,9 @@ function renderIntro(){
     </header>
     <h1>English Placement Test</h1>
     <p style="color:var(--ink-soft);font-size:15px;max-width:56ch;">
-      100 questions across 8 pages, covering grammar, everyday conversation,
-      vocabulary, and two short reading passages. There's no time limit —
-      take your time and choose the best answer for each question.
+      100 multiple-choice questions across 8 pages, covering grammar, everyday conversation,
+      vocabulary, and two short reading passages — followed by a short writing task on page 9.
+      There's no time limit — take your time and answer as best you can.
     </p>
     <div class="name-row" style="margin-top:22px;">
       Name: <input id="nameInput" type="text" placeholder="Type your name" />
@@ -458,6 +549,8 @@ function renderIntro(){
 }
 
 function renderPage(){
+  if(currentPage === 9){ renderWritingPage(); return; }
+
   const qs = pageQuestions(currentPage);
   let seenPassages = new Set();
   let html = `
@@ -496,10 +589,7 @@ function renderPage(){
   html += `
     <div class="navbtns">
       <button class="ghost" id="prevBtn" ${currentPage===1?'disabled':''}>&larr; Previous</button>
-      ${currentPage < TOTAL_PAGES
-        ? `<button id="nextBtn">Next &rarr;</button>`
-        : `<button id="finishBtn">Finish &amp; see results</button>`
-      }
+      <button id="nextBtn">Next &rarr;</button>
     </div>
   `;
 
@@ -517,25 +607,87 @@ function renderPage(){
   if(prevBtn) prevBtn.onclick = () => { currentPage--; window.scrollTo(0,0); renderPage(); };
   const nextBtn = document.getElementById('nextBtn');
   if(nextBtn) nextBtn.onclick = () => { currentPage++; window.scrollTo(0,0); renderPage(); };
+}
+
+function renderWritingPage(){
+  let html = `
+    <header class="top">
+      <div class="brand">Headway · 5th Edition</div>
+      <div class="brand">CEFR Placement Test A</div>
+    </header>
+    <div class="page-badge">${studentName ? "Test taker: " + escapeHtml(studentName) : ""}</div>
+    <h1 style="font-size:20px;">Page 9 · Writing</h1>
+    ${renderProgress()}
+    <p style="color:var(--ink-soft);font-size:14px;margin-bottom:20px;">
+      This part isn't scored automatically — your teacher will read it and use it alongside your multiple-choice score.
+      Write in full sentences and do your best; it's fine if it isn't perfect.
+    </p>
+  `;
+
+  WRITING_TASKS.forEach(t => {
+    const wc = wordCount(writingAnswers[t.id]);
+    html += `
+      <div class="qcard">
+        <div class="qnum">${escapeHtml(t.label)} &middot; suggested length: ${t.suggested}</div>
+        <div class="qtext" style="margin-bottom:10px;">${escapeHtml(t.prompt)}</div>
+        <textarea class="writing-box" data-id="${t.id}" placeholder="Write your answer here...">${escapeHtml(writingAnswers[t.id])}</textarea>
+        <div class="wordcount">${wc} word${wc===1?'':'s'}</div>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="navbtns">
+      <button class="ghost" id="prevBtn">&larr; Previous</button>
+      <button id="finishBtn">Finish &amp; see results</button>
+    </div>
+  `;
+
+  app.innerHTML = html;
+
+  app.querySelectorAll('.writing-box').forEach(el => {
+    el.addEventListener('input', () => {
+      writingAnswers[el.dataset.id] = el.value;
+      const card = el.closest('.qcard');
+      card.querySelector('.wordcount').textContent = `${wordCount(el.value)} word${wordCount(el.value)===1?'':'s'}`;
+      // update progress ribbon fill without a full re-render (keeps cursor focus)
+      const tabs = document.querySelectorAll('.tab');
+      const filled = WRITING_TASKS.filter(t => writingAnswers[t.id].trim().length > 0).length;
+      const pct = Math.round((filled / WRITING_TASKS.length) * 100);
+      const lastTab = tabs[tabs.length-1];
+      if(lastTab) lastTab.querySelector('.fill').style.width = pct + "%";
+    });
+  });
+
+  const prevBtn = document.getElementById('prevBtn');
+  if(prevBtn) prevBtn.onclick = () => { currentPage--; window.scrollTo(0,0); renderPage(); };
   const finishBtn = document.getElementById('finishBtn');
   if(finishBtn) finishBtn.onclick = () => { submitted = true; window.scrollTo(0,0); renderResults(); };
 }
 
 function levelFor(score){
-  if(score <= 20) return "Beginner (A1)";
-  if(score <= 35) return "Elementary (A1–A2)";
-  if(score <= 50) return "Pre-Intermediate (A2–B1)";
-  if(score <= 65) return "Intermediate (B1)";
-  if(score <= 80) return "Upper-Intermediate (B1–B2)";
-  return "Advanced (B2+)";
+  if(score <= 40) return "A1 – low · Headway Beginner, Units 1–7";
+  if(score <= 48) return "A1 – high · Headway Beginner, Units 8–14";
+  if(score <= 56) return "A2 – low · Headway Elementary, Units 1–6";
+  if(score <= 65) return "A2 – high · Headway Elementary, Units 7–12";
+  if(score <= 74) return "B1 – low · Headway Pre-Intermediate, Units 1–6";
+  if(score <= 83) return "B1 – low-medium · Headway Pre-Intermediate, Units 7–12";
+  if(score <= 92) return "B1 – medium-high · Headway Intermediate, Units 1–6";
+  if(score < 100) return "B1 – high · Headway Intermediate, Units 7–12";
+  return "100%! Likely ready for B2 (Headway Upper-Intermediate) or, if the test felt easy, C1 (Headway Advanced)";
 }
 
 function renderResults(){
   const totalCorrect = Q.reduce((sum,q,i) => sum + (answers[i]===q.answer?1:0), 0);
   const unanswered = answers.filter(a=>a===null).length;
 
+  if(!resultsSent){
+    resultsSent = true;
+    sendResultsToSheet(totalCorrect);
+  }
+
   const pageStats = [];
-  for(let p=1;p<=TOTAL_PAGES;p++){
+  for(let p=1;p<=8;p++){
     const qs = pageQuestions(p);
     const correct = qs.reduce((sum,q)=> sum + (answers[Q.indexOf(q)]===q.answer?1:0),0);
     pageStats.push({page:p, correct, of:qs.length});
@@ -568,7 +720,18 @@ function renderResults(){
         `).join("")}
       </table>
 
-      <h3 style="font-size:16px;margin-bottom:10px;">Review</h3>
+      <h3 style="font-size:16px;margin-bottom:10px;">Writing (page 9) — for teacher review</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-top:-4px;">Not auto-scored. Read alongside the multiple-choice result to judge fluency and accuracy.</p>
+      ${WRITING_TASKS.map(t => {
+        const resp = writingAnswers[t.id].trim();
+        return `<div class="writing-review">
+          <span class="wtitle">${escapeHtml(t.label)} &middot; ${wordCount(writingAnswers[t.id])} words</span>
+          <div class="wprompt">${escapeHtml(t.prompt)}</div>
+          ${resp ? escapeHtml(resp) : '<span class="wempty">No response written.</span>'}
+        </div>`;
+      }).join("")}
+
+      <h3 style="font-size:16px;margin:22px 0 10px;">Multiple-choice review</h3>
       ${Q.map((q,i) => {
         const correct = answers[i]===q.answer;
         const yourAnswer = answers[i]===null ? "No answer" : `${letters(answers[i])}) ${q.options[answers[i]]}`;
@@ -580,22 +743,92 @@ function renderResults(){
         </div>`;
       }).join("")}
 
-      <div class="navbtns" style="justify-content:flex-start;margin-top:24px;">
+      <div class="navbtns" style="justify-content:flex-start;margin-top:24px;gap:12px;">
+        <button id="downloadBtn">Download results (.txt)</button>
+        <button class="ghost" id="copyBtn">Copy summary</button>
         <button class="ghost" id="retakeBtn">Retake test</button>
       </div>
     </div>
     <footer class="note">
-      This level guide is an approximate mapping of raw score to CEFR band for orientation only.
-      For an official interpretation, refer to Oxford's Headway Placement Test Teacher's Guide.
+      Score bands and level guidance are from Oxford's official Headway CEFR Placement Test A answer key (2018).
     </footer>
   `;
   app.innerHTML = html;
+
+  document.getElementById('downloadBtn').onclick = () => {
+    const text = buildSummaryText(totalCorrect);
+    const blob = new Blob([text], {type: "text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(studentName||"student").replace(/\s+/g,"_")}_placement_test_results.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  document.getElementById('copyBtn').onclick = async () => {
+    const text = buildSummaryText(totalCorrect);
+    try{
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(()=> btn.textContent = original, 1500);
+    }catch(e){
+      alert("Couldn't copy automatically — you can select and copy the results manually.");
+    }
+  };
   document.getElementById('retakeBtn').onclick = () => {
     answers.fill(null);
+    WRITING_TASKS.forEach(t => writingAnswers[t.id] = "");
     currentPage = 1;
     submitted = false;
     renderIntro();
   };
+}
+
+function sendResultsToSheet(totalCorrect){
+  if(!SHEET_WEBAPP_URL) return; // auto-collection not configured — silently skip
+  const mcAnswers = Q.map((q,i) => answers[i]===null ? "-" : letters(answers[i])).join("");
+  const payload = {
+    name: studentName || "(no name given)",
+    date: new Date().toISOString(),
+    score: totalCorrect,
+    level: levelFor(totalCorrect),
+    mcAnswers: mcAnswers,
+    writing1: writingAnswers["w1"] || "",
+    writing2: writingAnswers["w2"] || ""
+  };
+  fetch(SHEET_WEBAPP_URL, {
+    method: "POST",
+    mode: "no-cors", // Apps Script web apps don't return CORS headers; we don't need to read the response
+    headers: {"Content-Type": "text/plain"},
+    body: JSON.stringify(payload)
+  }).catch(err => console.warn("Could not send results to sheet:", err));
+}
+
+function buildSummaryText(totalCorrect){
+  const lines = [];
+  lines.push("HEADWAY CEFR PLACEMENT TEST A — RESULTS");
+  lines.push("Test taker: " + (studentName || "(name not given)"));
+  lines.push("Date: " + new Date().toLocaleDateString());
+  lines.push("");
+  lines.push(`Score: ${totalCorrect} / 100`);
+  lines.push(`Level: ${levelFor(totalCorrect)}`);
+  lines.push("");
+  lines.push("--- Multiple-choice answers ---");
+  Q.forEach((q,i) => {
+    const given = answers[i]===null ? "-" : letters(answers[i]);
+    const correct = answers[i]===q.answer ? "correct" : `incorrect (correct: ${letters(q.answer)})`;
+    lines.push(`Q${q.n}: ${given}  — ${correct}`);
+  });
+  lines.push("");
+  lines.push("--- Writing responses ---");
+  WRITING_TASKS.forEach(t => {
+    lines.push(`\n${t.label} (${wordCount(writingAnswers[t.id])} words)`);
+    lines.push(`Prompt: ${t.prompt}`);
+    lines.push(writingAnswers[t.id].trim() || "(no response)");
+  });
+  return lines.join("\n");
 }
 
 renderIntro();
