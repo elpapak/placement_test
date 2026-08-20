@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CEFR Placement Test A</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --paper:#f6f3ec;
+    --ink:#22261f;
+    --ink-soft:#5a5b52;
+    --rule:#d8d3c4;
+    --accent:#8a3324;
+    --accent-soft:#c96a4d;
+    --good:#3f6b4a;
+    --bad:#a3402c;
+    --card:#fffdf8;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family: 'Iowan Old Style','Palatino Linotype',Georgia,'Times New Roman',serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:32px 20px 80px;}
+
+  header.top{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  header.top .brand{
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  h1{
+    font-size:28px;
+    margin:4px 0 18px;
+    font-weight:600;
+  }
+  .name-row{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .name-row input{
+    font-family:inherit;
+    font-size:14px;
+    border:none;
+    border-bottom:1px solid var(--rule);
+    background:transparent;
+    color:var(--ink);
+    padding:2px 4px;
+    flex:1;
+    max-width:260px;
+  }
+  .name-row input:focus{outline:none;border-bottom-color:var(--accent);}
+
+  /* progress ribbon = signature element: torn page tabs */
+  .progress-ribbon{
+    display:flex;
+    gap:3px;
+    margin:18px 0 28px;
+  }
+  .tab{
+    flex:1;
+    height:8px;
+    background:var(--rule);
+    border-radius:1px;
+    position:relative;
+    overflow:hidden;
+  }
+  .tab .fill{
+    position:absolute;left:0;top:0;bottom:0;width:0%;
+    background:var(--accent-soft);
+    transition:width .25s ease;
+  }
+  .tab.current .fill{background:var(--accent);}
+  .progress-label{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:right;
+    margin-top:-20px;
+    margin-bottom:26px;
+  }
+
+  .passage{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--accent-soft);
+    padding:16px 18px;
+    margin:0 0 20px;
+    font-size:15px;
+    color:#37392f;
+  }
+  .passage .tag{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--accent);
+    margin-bottom:8px;
+    display:block;
+  }
+
+  .qcard{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:18px 20px;
+    margin-bottom:14px;
+  }
+  .writing-box{
+    width:100%;
+    min-height:140px;
+    font-family:inherit;
+    font-size:15.5px;
+    line-height:1.6;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:12px 14px;
+    resize:vertical;
+  }
+  .writing-box:focus{outline:none;border-color:var(--accent-soft);}
+  .wordcount{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:right;
+    margin-top:6px;
+  }
+  .writing-review{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:3px solid var(--accent-soft);
+    padding:14px 18px;
+    margin-bottom:12px;
+    font-size:14.5px;
+    white-space:pre-wrap;
+  }
+  .writing-review .wtitle{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--accent);
+    margin-bottom:8px;
+    display:block;
+  }
+  .writing-review .wprompt{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+    font-style:italic;
+  }
+  .writing-review .wempty{
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+  .qnum{
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:.06em;
+    margin-bottom:6px;
+  }
+  .qtext{
+    font-size:17px;
+    margin-bottom:14px;
+  }
+  .qtext .dialogue-a{color:var(--ink-soft);font-style:italic;}
+  .blank{
+    display:inline-block;
+    min-width:64px;
+    border-bottom:1px solid var(--ink);
+    margin:0 2px;
+  }
+  .options{
+    display:grid;
+    gap:8px;
+  }
+  .opt{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    padding:9px 12px;
+    border:1px solid var(--rule);
+    border-radius:2px;
+    cursor:pointer;
+    font-size:15.5px;
+    transition:background .12s, border-color .12s;
+  }
+  .opt:hover{background:#f1ede0;}
+  .opt input{accent-color:var(--accent);margin:0;}
+  .opt.selected{border-color:var(--accent);background:#f4e9e2;}
+  .opt .letter{
+    font-weight:600;
+    color:var(--accent);
+    width:14px;
+  }
+
+  .navbtns{
+    display:flex;
+    justify-content:space-between;
+    margin-top:26px;
+    gap:10px;
+  }
+  button{
+    font-family:inherit;
+    font-size:14px;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    padding:11px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    letter-spacing:.02em;
+  }
+  button.ghost{
+    background:transparent;
+    color:var(--ink);
+  }
+  button:disabled{opacity:.35;cursor:not-allowed;}
+  button:hover:not(:disabled){opacity:.85;}
+
+  .page-badge{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+
+  /* results */
+  .results h2{font-size:24px;margin-bottom:4px;}
+  .score-hero{
+    background:var(--card);
+    border:1px solid var(--rule);
+    padding:26px 22px;
+    text-align:center;
+    margin:20px 0 26px;
+  }
+  .score-hero .num{
+    font-size:56px;
+    font-weight:700;
+    color:var(--accent);
+    line-height:1;
+  }
+  .score-hero .outof{font-size:15px;color:var(--ink-soft);}
+  .score-hero .level{
+    margin-top:14px;
+    font-size:15px;
+    display:inline-block;
+    padding:8px 16px;
+    border:1px solid var(--accent-soft);
+    border-radius:16px;
+    color:var(--accent);
+    max-width:90%;
+    line-height:1.4;
+  }
+  table.breakdown{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+    margin-bottom:24px;
+  }
+  table.breakdown th, table.breakdown td{
+    text-align:left;
+    padding:8px 6px;
+    border-bottom:1px solid var(--rule);
+  }
+  table.breakdown th{color:var(--ink-soft);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;}
+  .bar-bg{background:var(--rule);height:6px;border-radius:3px;overflow:hidden;width:100%;}
+  .bar-fill{background:var(--accent-soft);height:100%;}
+
+  .review-item{
+    border:1px solid var(--rule);
+    border-left:3px solid var(--rule);
+    padding:12px 16px;
+    margin-bottom:8px;
+    font-size:14px;
+  }
+  .review-item.wrong{border-left-color:var(--bad);}
+  .review-item.right{border-left-color:var(--good);}
+  .review-item .qn{color:var(--ink-soft);font-size:12px;margin-bottom:3px;}
+  .review-item .your{color:var(--bad);}
+  .review-item .correct{color:var(--good);}
+
+  footer.note{
+    margin-top:40px;
+    font-size:12px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--rule);
+    padding-top:14px;
+  }
+
+  @media (max-width:480px){
+    h1{font-size:23px;}
+    .qtext{font-size:15.5px;}
+    .score-hero .num{font-size:44px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ---------------- DATA ---------------- */
+// Each item: n (question number), page (1-8), passage (optional shared text block id),
+// text (question stem, blanks as ____), options[4], answer (0-3 index)
+
+const passages = {
+  family: {
+    tag: "Read the text, then answer questions 20–25.",
+    body: "David Smith is a doctor. He works in a hospital. His wife, Angela, is a bank manager. They have two children, Robert and Susan. Robert is eleven and Susan is nine. They're at school.\n\nLast Sunday, the family got up early. David made a big breakfast of eggs and sausages. Then they went to the park. David and Robert played football, and Angela and Susan played tennis. The weather was beautiful. They enjoyed it. In the afternoon, they went out to a restaurant for lunch."
+  },
+  rachel: {
+    tag: "Read the text, then answer questions 45–50.",
+    body: "My name's Rachel. I like summer best. We cook and eat in the garden, and we often go to the beach. I don't like sunbathing, but I love swimming. I was born in a village near the seaside, and my family went to the beach almost every day. I could swim when I was a baby. I loved it then, and I love it now.\n\nMy brother loves surfing and he's really good at it. He's the best surfer in our school. He's won ten or fifteen competitions. I've tried it, but I've never learnt to surf. Maybe I'll try it again when I retire!"
+  },
+  greg: {
+    tag: "Read the text, then answer questions 70–75.",
+    body: "Greg is 21 years old. He's been studying at Manchester University for the past three years, but he's going to finish his course next month. 'I'd like to get a job here in Manchester,' he says, 'but that may not be possible. My degree is in business, and I'd like to work in management. But there aren't a lot of jobs right now, and I haven't got any money. I'm feeling a bit nervous and depressed about finding a job, actually. It's on my mind a lot. I'm afraid I won't find one, and I'll be unemployed for a long time.'\n\nIf Greg doesn't find a job in Manchester, he'll look for something in nearby Leeds or Sheffield. 'As soon as I finish my exams, I'll start applying,' he says. 'That's next month. Right now, I need to concentrate on my studies.' He adds, 'I don't think I'll be happy until I start working in Manchester.'"
+  },
+  neighbours: {
+    tag: "Read the text, then answer questions 94–100.",
+    body: "Seamus Carver had lived next door to Andrew Smith for about two years before they met. 'Seamus used to go to work early in the morning and come home in the afternoon, and I used to work nights at the factory,' said Andrew. 'We were never home at the same time. He worked on Saturdays and Sundays, and had Tuesdays and Wednesdays off. We never had a good look at each other.' But when both men retired in the same year, their schedules changed. 'We'd both been out to the cinema one night, and we came home at the same time and met in front of our houses.'\n\n'Right away, Seamus asked me if I'd gone to school at Oak Park Primary School in York. I said that I had, and then I understood. He and I had known each other for a year or two when we were young kids, like maybe six. And amazingly, we still remembered each other!' Both Seamus and Andrew said their families had moved away from York when they were young. What they hadn't realised was that both families had moved to Bristol, and both men had been living there ever since."
+  }
+};
+
+const Q = [
+{n:1,page:1,text:"Pete ____ a teacher.",options:["isn't","not","aren't","am not"],answer:0},
+{n:2,page:1,text:"Bill ____ two brothers.",options:["have","has","is","are"],answer:1},
+{n:3,page:1,text:"A: ____ Italian food?\nB: Yes, I do.",options:["Are you like","Likes","Do you like","You're like"],answer:2},
+{n:4,page:1,text:"A: Was Shakespeare a painter?\nB: No, he ____.",options:["weren't","didn't","isn't","wasn't"],answer:3},
+{n:5,page:1,text:"____ up early yesterday morning?",options:["Got","Did you","You get","Did you get"],answer:3},
+{n:6,page:1,text:"Peter ____ to work yesterday.",options:["not go","didn't go","didn't","wasn't"],answer:1},
+{n:7,page:1,text:"Can you ____ French?",options:["speak","to speak","speaks","spoke"],answer:0},
+{n:8,page:1,text:"A: Good night.\nB: ____",options:["That's great. Thank you.","No, I don't know.","You too. Sleep well.","Hello. How are you?"],answer:2},
+{n:9,page:1,text:"A: How do you spell 'friend'?\nB: ____",options:["It's Miguel.","F-R-I-E-N-D.","My surname is Jackson.","Yes, he is."],answer:1},
+{n:10,page:1,text:"A: How much is the camera?\nB: ____",options:["It's on page thirty.","It's from Spain.","It's about six months old.","It's fifty pounds."],answer:3},
+{n:11,page:1,text:"A: Excuse me. How do I get to the bus station?\nB: ____",options:["In Oxford Street.","Yes, that's right.","It's about ten minutes.","Go out of the school and turn right."],answer:3},
+{n:12,page:1,text:"A: What time were you born?\nB: ____",options:["My birthday's in August.","On the third of March.","At six o'clock in the morning.","In 1999."],answer:2},
+{n:13,page:1,text:"A: ____\nB: I have a headache, that's all.",options:["What's the matter?","Can I have a coffee, please?","Thanks for everything.","Here's a present for you."],answer:0},
+{n:14,page:1,text:"A: What's your job?\nB: I'm ____.",options:["married","a doctor","from Italy","David Johnson"],answer:1},
+
+{n:15,page:2,text:"John isn't Alice's ____. They aren't married.",options:["husband","wife","father","mother"],answer:0},
+{n:16,page:2,text:"What do they speak in ____?",options:["Spanish","Portuguese","American","Brazil"],answer:3},
+{n:17,page:2,text:"Your car keys are in the ____.",options:["lamp","armchair","drawer","sofa"],answer:2},
+{n:18,page:2,text:"We ____ a painting for €500.",options:["were","said","bought","heard"],answer:2},
+{n:19,page:2,text:"Do you play ____?",options:["ice hockey","the cinema","holidays","sailing"],answer:0},
+{n:20,page:2,passage:"family",text:"David and Angela are ____.",options:["brother and sister","married","doctors","bank managers"],answer:1},
+{n:21,page:2,passage:"family",text:"Angela is Susan's ____.",options:["sister","father","mother","brother"],answer:2},
+{n:22,page:2,passage:"family",text:"Robert isn't ____.",options:["a student","a child","a doctor","Susan's brother"],answer:2},
+{n:23,page:2,passage:"family",text:"David, Angela, Robert and Susan went to the park ____.",options:["at night","in the evening","in the afternoon","in the morning"],answer:3},
+{n:24,page:2,passage:"family",text:"David ____ breakfast.",options:["didn't enjoy","bought","cooked","didn't have"],answer:2},
+{n:25,page:2,passage:"family",text:"They had ____.",options:["a holiday","a lot of housework","a horrible day","a good time"],answer:3},
+{n:26,page:2,text:"They ____ in Hong Kong in 2010.",options:["isn't","aren't","wasn't","weren't"],answer:3},
+{n:27,page:2,text:"____ swim when I was five years old.",options:["I can","I could","I","I was"],answer:1},
+{n:28,page:2,text:"I ____ to my brother right now.",options:["'m talking","talk","talking","talked"],answer:0},
+
+{n:29,page:3,text:"____ to stay home and watch TV.",options:["I'm going","I going","Going","Am going"],answer:0},
+{n:30,page:3,text:"Helena has never ____ to Australia.",options:["went","go","been","goes"],answer:2},
+{n:31,page:3,text:"We ____ invite Tomas to the party.",options:["haven't","won't","not","aren't"],answer:1},
+{n:32,page:3,text:"A: ____\nB: Sure. Good idea.",options:["What does 'bilingual' mean?","Can I open a window? It's hot in here.","I like your jumper.","Excuse me! Can you help me?"],answer:1},
+{n:33,page:3,text:"A: There's an Internet café in Park Lane, next to the bank.\nB: ____",options:["Is that near here?","Just two minutes, that's all.","Do you need some money?","Go straight ahead."],answer:0},
+{n:34,page:3,text:"A: ____\nB: No, it isn't.",options:["Can I speak to Emma, please?","What's the address?","Can I take a message?","Is that Emma?"],answer:3},
+{n:35,page:3,text:"A: ____\nB: Yes, please. It's delicious.",options:["Could you pass the salt, please?","How would you like your coffee?","Would you like some more rice?","Is there any more salad left?"],answer:2},
+{n:36,page:3,text:"A: What about this jacket?\nB: ____",options:["Credit card's fine.","No, it isn't the right blue.","How do you want to pay?","Can I help you?"],answer:1},
+{n:37,page:3,text:"A: ____\nB: Well, we could go swimming.",options:["How are you feeling today?","What shall we do this afternoon?","OK. I'll get my swimming costume.","It's too cold to go swimming."],answer:1},
+{n:38,page:3,text:"A: How do you find living in New York?\nB: ____",options:["No, I missed it.","Thank you. I'm glad you like it.","I'm enjoying it a lot.","I'm very well, thanks."],answer:2},
+{n:39,page:3,text:"I don't like preparing food, but I like ____ in restaurants.",options:["cooking","eating","going","using"],answer:1},
+{n:40,page:3,text:"The plates are in the ____.",options:["cups","fridge","cooker","cupboard"],answer:3},
+{n:41,page:3,text:"Can you ____ this from German to English?",options:["speak","make","think","translate"],answer:3},
+{n:42,page:3,text:"She speaks ____ Spanish.",options:["fluent","hard","well","very"],answer:0},
+
+{n:43,page:4,text:"It's a lovely day. It's ____. Let's go to the beach.",options:["cool and cloudy","cold and foggy","sunny and warm","wet and windy"],answer:2},
+{n:44,page:4,text:"My father is a nurse. He works in a ____.",options:["cinema","hospital","factory","shop"],answer:1},
+{n:45,page:4,passage:"rachel",text:"Rachel talks about ____.",options:["her plans for the future","her favourite season","what she did last month","her favourite food"],answer:1},
+{n:46,page:4,passage:"rachel",text:"Rachel talks about her ____.",options:["leisure activities","working life","school days","parents and grandparents"],answer:0},
+{n:47,page:4,passage:"rachel",text:"Rachel ____ when she was a very little girl.",options:["learned to swim","didn't like swimming","lived in the city","rarely went to the beach"],answer:0},
+{n:48,page:4,passage:"rachel",text:"Rachel's brother ____ surfing.",options:["is learning","has never been","has done a lot of","is going to try"],answer:2},
+{n:49,page:4,passage:"rachel",text:"Rachel ____ surfing.",options:["has never been","isn't good at","has won awards for","hates"],answer:1},
+{n:50,page:4,passage:"rachel",text:"Rachel's brother is ____ surfer than his classmates.",options:["an older","a safer","a worse","a better"],answer:3},
+{n:51,page:4,text:"I'm thinking ____ to Japan next year.",options:["of going","I go","goes","going"],answer:0},
+{n:52,page:4,text:"One day, I hope ____ China.",options:["will visit","visit","visiting","to visit"],answer:3},
+{n:53,page:4,text:"If I ____ travelling, I'll send you lots of postcards.",options:["'ll go","went","go","'ll"],answer:2},
+{n:54,page:4,text:"In the future, cities on Mars ____.",options:["are being built","can build","will be built","are building"],answer:2},
+{n:55,page:4,text:"All of the sandwiches ____.",options:["were eaten","are eating","were eating","have eaten"],answer:0},
+
+{n:56,page:5,text:"There was no money in the office when I arrived at work. All of it ____ by burglars.",options:["has been stolen","had been stealing","had stolen","had been stolen"],answer:3},
+{n:57,page:5,text:"A: ____\nB: £8 for an adult, £4.50 for children under 12.",options:["How much is it to get in?","I gave you a £10 note, not a £5 note.","How much is a litre of petrol?","It's cheaper if you buy a family ticket."],answer:0},
+{n:58,page:5,text:"A: ____\nB: Cheer up! You've got me. I'm always here for you.",options:["I passed my exam.","I'm getting married next week.","I'm going on holiday to Australia tomorrow.","I don't think I have many friends."],answer:3},
+{n:59,page:5,text:"A: What are your symptoms?\nB: ____",options:["I've got a temperature and I feel awful.","Just take it easy for a while.","I've got food poisoning.","Drink plenty of liquids."],answer:0},
+{n:60,page:5,text:"A: Hello? Hello?\nB: ____",options:["I'm not sure. Can I get back to you later?","Sorry, we were cut off.","OK. Speak to you soon.","Oh, and can you give me Dean's number?"],answer:1},
+{n:61,page:5,text:"A: Mike and Jo are such nice people.\nB: ____",options:["I know. There were so many problems.","Yes, I don't know how they live in it.","You're right. We had so much fun with them.","That's true. I don't know where it's all gone."],answer:2},
+{n:62,page:5,text:"A: I'll give you a lift into town if you like.\nB: ____",options:["I'm sorry, it's not working today.","I've got enough already thanks.","Go ahead. It's very hot in here.","That would be great."],answer:3},
+{n:63,page:5,text:"I didn't have much time, so I did my homework ____.",options:["quickly","lazily","peacefully","tragically"],answer:0},
+{n:64,page:5,text:"I haven't got any ____. Is there a chemist's near here?",options:["envelopes","doughnuts","stamps","deodorant"],answer:3},
+{n:65,page:5,text:"We were ____ during the film. It wasn't interesting at all.",options:["shocked","bored","annoyed","depressed"],answer:1},
+{n:66,page:5,text:"I'm ____ a lot of training for my new job.",options:["spending","studying","doing","working"],answer:2},
+{n:67,page:5,text:"Henry wants to study at Oxford University, but he also wants to study at Cambridge University. He can't ____ up his mind.",options:["get","go","take","make"],answer:3},
+{n:68,page:5,text:"I ____ my job because the hours were too long.",options:["gave up","took off","put away","went back"],answer:0},
+{n:69,page:5,text:"My brother really ____ my father.",options:["picks up","gets on","takes after","looks up"],answer:2},
+
+{n:70,page:6,passage:"greg",text:"Greg ____.",options:["would like to leave Manchester","hopes to continue studying for another year","hasn't finished his course yet","wasn't studying last year"],answer:2},
+{n:71,page:6,passage:"greg",text:"Greg ____ business.",options:["would like to study","is studying","already has a job in","isn't interested in"],answer:1},
+{n:72,page:6,passage:"greg",text:"Greg ____ finding a job.",options:["doesn't think a lot about","thinks it won't be difficult","says he feels confident about","feels worried about"],answer:3},
+{n:73,page:6,passage:"greg",text:"Greg is going to apply for jobs in Leeds and Sheffield ____ in Manchester.",options:["after trying for a job","as soon as he finds a job","while he's applying for jobs","before he looks for work"],answer:0},
+{n:74,page:6,passage:"greg",text:"At the moment, Greg's main focus is ____.",options:["his studies","applying for jobs","searching for a flat","preparing to move"],answer:0},
+{n:75,page:6,passage:"greg",text:"Greg won't be happy if he doesn't ____.",options:["fail his exams","have his exams next month","get work in Leeds or Sheffield","find a job in Manchester"],answer:3},
+{n:76,page:6,text:"The sign says No parking. We ____ to park here.",options:["shouldn't","aren't allowed","can't","should"],answer:1},
+{n:77,page:6,text:"A: How long have you ____ English?\nB: For about six years.",options:["studying","been studying","study","to study"],answer:1},
+{n:78,page:6,text:"If ____ told me about your problems, I'd have helped.",options:["you'll","you're","you've","you'd"],answer:3},
+{n:79,page:6,text:"We can text ____ after work and arrange a place to meet.",options:["each other","each","us","another"],answer:0},
+{n:80,page:6,text:"I saw Mrs Jones yesterday. She was surprised and asked me what ____ in London.",options:["are you doing","am I doing","I was doing","if I'm doing"],answer:2},
+{n:81,page:6,text:"I wish you ____ before you speak.",options:["'d think","'ll think","think","'re thinking"],answer:0},
+
+{n:82,page:7,text:"A: ____\nB: Oh, dear. I'd love to, but this weekend I'm so busy.",options:["Are you doing anything next Saturday afternoon?","I was wondering if we could meet next Saturday morning.","What are you doing next Sunday evening?","I'm afraid I've already got something to do on Sunday."],answer:1},
+{n:83,page:7,text:"A: I failed my driving test again.\nB: ____",options:["Absolutely.","That's too bad.","Fair enough.","That's amazing!"],answer:1},
+{n:84,page:7,text:"A: I think you must have made a mistake. I'm pretty sure I gave you a £20 note.\nB: ____",options:["Thanks. That's for you.","Yes, I'm afraid it is. But it doesn't include tax.","Sure. Tell me your account number.","Oh, did you? Er… sorry about that."],answer:3},
+{n:85,page:7,text:"A: What time will we arrive?\nB: ____",options:["Presumably, the others will be late.","Generally, on time.","Hopefully, in the next hour.","Obviously, we're late."],answer:2},
+{n:86,page:7,text:"A: ____\nB: Oh, well. You live and learn.",options:["I trusted Adam and he stole my money.","I've got ten exams in the next two weeks.","I forgot her birthday, so I sent her a text.","I wonder if their marriage will last."],answer:0},
+{n:87,page:7,text:"A: ____\nB: In your dreams. Not if you were the last man on earth.",options:["Come on, you know you want to go out with me really.","I'm cleaned out! This new jacket cost the earth.","We're throwing caution to the wind and emigrating to Australia.","I'm really tired, so I'm going to stay home tonight."],answer:0},
+{n:88,page:7,text:"His attendance is ____. Some weeks he comes every day, other weeks he misses several classes.",options:["irregular","unsuitable","untrue","inaccurate"],answer:0},
+{n:89,page:7,text:"I don't eat much fruit. I'm not that ____ on it.",options:["crazy","keen","fond","excited"],answer:1},
+{n:90,page:7,text:"A lot of people visited the art gallery to see the painter's ____.",options:["service","masterpiece","architecture","headline"],answer:1},
+{n:91,page:7,text:"Two men ____ jail last night.",options:["broke out of","sorted out","took up","broke up with"],answer:0},
+{n:92,page:7,text:"I felt bad because my brother and I ____.",options:["admitted","accused","quarrelled","criticized"],answer:2},
+{n:93,page:7,text:"The sailors didn't see ____ for two months as they crossed the Atlantic.",options:["world","earth","ground","land"],answer:3},
+
+{n:94,page:8,passage:"neighbours",text:"Seamus and Andrew became next door neighbours ____.",options:["two years after they first met","before they met","after they met at work","because they were friends"],answer:1},
+{n:95,page:8,passage:"neighbours",text:"While they were working, they ____.",options:["tried to meet","sometimes met","didn't meet","didn't get along well"],answer:2},
+{n:96,page:8,passage:"neighbours",text:"When they met, they ____ the cinema.",options:["hadn't yet been to","were in","were leaving","were coming home from"],answer:3},
+{n:97,page:8,passage:"neighbours",text:"Seamus asked, '____ to Oak Park Primary School in York?'",options:["Have you ever been","Did you go","Were you going","Had you gone"],answer:1},
+{n:98,page:8,passage:"neighbours",text:"Seamus and Andrew had been friends ____.",options:["after their families had moved to Bristol","for the past two years","their whole lives","when they were very young"],answer:3},
+{n:99,page:8,passage:"neighbours",text:"Andrew and Seamus had known each other ____.",options:["when they were one or two years old","for about six years, as kids","when they were about six years old","for the past six years"],answer:2},
+{n:100,page:8,passage:"neighbours",text:"Andrew said that ____ remembered each other.",options:["it would have been amazing if they had","he wasn't shocked that they","he was surprised that they","he hadn't realised that they"],answer:2},
+];
+
+/* ---------------- RESULTS AUTO-COLLECTION ----------------
+   To automatically collect every student's results in a Google Sheet:
+   1. Create a new Google Sheet.
+   2. In the Sheet, go to Extensions > Apps Script, paste the script
+      from the accompanying "google_apps_script.gs" file, and save.
+   3. Click Deploy > New deployment > select type "Web app".
+      - Execute as: Me
+      - Who has access: Anyone
+   4. Click Deploy, authorize it, and copy the Web app URL it gives you.
+   5. Paste that URL below, between the quotes.
+   Leave it blank ("") to disable auto-collection — results will still
+   work fine with the Download/Copy buttons on the results screen.
+------------------------------------------------------------- */
+const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/XXXXXXXX/exec";
+
+const WRITING_TASKS = [
+  {
+    id: "w1",
+    label: "Task 1 · About you",
+    prompt: "Write about yourself. Include your name, where you're from, your job or studies, your family, and what you like to do in your free time.",
+    suggested: "40–60 words"
+  },
+  {
+    id: "w2",
+    label: "Task 2 · A story",
+    prompt: "Write a short email or message to a friend about your last holiday or a memorable weekend. What did you do? Who were you with? How did you feel?",
+    suggested: "80–120 words"
+  }
+];
+
+const TOTAL_PAGES = 9; // pages 1–8 are multiple choice, page 9 is writing
+const answers = new Array(Q.length).fill(null);
+const writingAnswers = {};
+WRITING_TASKS.forEach(t => writingAnswers[t.id] = "");
+let currentPage = 1;
+let studentName = "";
+let submitted = false;
+let resultsSent = false;
+
+/* ---------------- RENDER ---------------- */
+const app = document.getElementById('app');
+
+function pageQuestions(p){ return Q.filter(q => q.page === p); }
+
+function letters(i){ return ["a","b","c","d"][i]; }
+
+function renderStem(text){
+  const parts = text.split("____");
+  if(parts.length === 1) return escapeHtml(text).replace(/\n/g,"<br>");
+  return parts.map(escapeHtml).join('<span class="blank"></span>').replace(/\n/g,"<br>");
+}
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function wordCount(s){
+  return (s.trim().match(/\S+/g) || []).length;
+}
+
+function renderProgress(){
+  let tabs = "";
+  for(let p=1;p<=TOTAL_PAGES;p++){
+    let pct;
+    if(p === 9){
+      const filled = WRITING_TASKS.filter(t => writingAnswers[t.id].trim().length > 0).length;
+      pct = Math.round((filled / WRITING_TASKS.length) * 100);
+    } else {
+      const qs = pageQuestions(p);
+      const answeredCount = qs.filter(q => answers[Q.indexOf(q)] !== null).length;
+      pct = Math.round((answeredCount/qs.length)*100);
+    }
+    tabs += `<div class="tab ${p===currentPage?'current':''}"><div class="fill" style="width:${pct}%"></div></div>`;
+  }
+  return `<div class="progress-ribbon">${tabs}</div>
+  <div class="progress-label">Page ${currentPage} of ${TOTAL_PAGES}</div>`;
+}
+
+function renderIntro(){
+  app.innerHTML = `
+    <header class="top">
+      <div class="brand">Headway · 5th Edition</div>
+      <div class="brand">CEFR Placement Test A</div>
+    </header>
+    <h1>English Placement Test</h1>
+    <p style="color:var(--ink-soft);font-size:15px;max-width:56ch;">
+      100 multiple-choice questions across 8 pages, covering grammar, everyday conversation,
+      vocabulary, and two short reading passages — followed by a short writing task on page 9.
+      There's no time limit — take your time and answer as best you can.
+    </p>
+    <div class="name-row" style="margin-top:22px;">
+      Name: <input id="nameInput" type="text" placeholder="Type your name" />
+    </div>
+    <div class="navbtns" style="justify-content:flex-start;">
+      <button id="startBtn">Start test</button>
+    </div>
+    <footer class="note">Your answers are only stored in this browser tab — nothing is sent anywhere. Refreshing the page will reset your progress.</footer>
+  `;
+  document.getElementById('startBtn').onclick = () => {
+    studentName = document.getElementById('nameInput').value.trim();
+    currentPage = 1;
+    renderPage();
+  };
+}
+
+function renderPage(){
+  if(currentPage === 9){ renderWritingPage(); return; }
+
+  const qs = pageQuestions(currentPage);
+  let seenPassages = new Set();
+  let html = `
+    <header class="top">
+      <div class="brand">Headway · 5th Edition</div>
+      <div class="brand">CEFR Placement Test A</div>
+    </header>
+    <div class="page-badge">${studentName ? "Test taker: " + escapeHtml(studentName) : ""}</div>
+    <h1 style="font-size:20px;">Page ${currentPage}</h1>
+    ${renderProgress()}
+  `;
+
+  qs.forEach(q => {
+    if(q.passage && !seenPassages.has(q.passage)){
+      seenPassages.add(q.passage);
+      const p = passages[q.passage];
+      html += `<div class="passage"><span class="tag">${p.tag}</span>${p.body.split("\n\n").map(para=>`<p style="margin:0 0 8px;">${escapeHtml(para)}</p>`).join("")}</div>`;
+    }
+    const idx = Q.indexOf(q);
+    html += `
+      <div class="qcard" data-idx="${idx}">
+        <div class="qnum">Question ${q.n} of 100</div>
+        <div class="qtext">${renderStem(q.text)}</div>
+        <div class="options">
+          ${q.options.map((opt,i) => `
+            <label class="opt ${answers[idx]===i?'selected':''}" data-idx="${idx}" data-opt="${i}">
+              <input type="radio" name="q${idx}" ${answers[idx]===i?'checked':''} />
+              <span class="letter">${letters(i)}</span><span>${escapeHtml(opt)}</span>
+            </label>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="navbtns">
+      <button class="ghost" id="prevBtn" ${currentPage===1?'disabled':''}>&larr; Previous</button>
+      <button id="nextBtn">Next &rarr;</button>
+    </div>
+  `;
+
+  app.innerHTML = html;
+
+  app.querySelectorAll('.opt').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.idx);
+      const opt = parseInt(el.dataset.opt);
+      answers[idx] = opt;
+      renderPage();
+    });
+  });
+  const prevBtn = document.getElementById('prevBtn');
+  if(prevBtn) prevBtn.onclick = () => { currentPage--; window.scrollTo(0,0); renderPage(); };
+  const nextBtn = document.getElementById('nextBtn');
+  if(nextBtn) nextBtn.onclick = () => { currentPage++; window.scrollTo(0,0); renderPage(); };
+}
+
+function renderWritingPage(){
+  let html = `
+    <header class="top">
+      <div class="brand">Headway · 5th Edition</div>
+      <div class="brand">CEFR Placement Test A</div>
+    </header>
+    <div class="page-badge">${studentName ? "Test taker: " + escapeHtml(studentName) : ""}</div>
+    <h1 style="font-size:20px;">Page 9 · Writing</h1>
+    ${renderProgress()}
+    <p style="color:var(--ink-soft);font-size:14px;margin-bottom:20px;">
+      This part isn't scored automatically — your teacher will read it and use it alongside your multiple-choice score.
+      Write in full sentences and do your best; it's fine if it isn't perfect.
+    </p>
+  `;
+
+  WRITING_TASKS.forEach(t => {
+    const wc = wordCount(writingAnswers[t.id]);
+    html += `
+      <div class="qcard">
+        <div class="qnum">${escapeHtml(t.label)} &middot; suggested length: ${t.suggested}</div>
+        <div class="qtext" style="margin-bottom:10px;">${escapeHtml(t.prompt)}</div>
+        <textarea class="writing-box" data-id="${t.id}" placeholder="Write your answer here...">${escapeHtml(writingAnswers[t.id])}</textarea>
+        <div class="wordcount">${wc} word${wc===1?'':'s'}</div>
+      </div>
+    `;
+  });
+
+  html += `
+    <div class="navbtns">
+      <button class="ghost" id="prevBtn">&larr; Previous</button>
+      <button id="finishBtn">Finish &amp; see results</button>
+    </div>
+  `;
+
+  app.innerHTML = html;
+
+  app.querySelectorAll('.writing-box').forEach(el => {
+    el.addEventListener('input', () => {
+      writingAnswers[el.dataset.id] = el.value;
+      const card = el.closest('.qcard');
+      card.querySelector('.wordcount').textContent = `${wordCount(el.value)} word${wordCount(el.value)===1?'':'s'}`;
+      // update progress ribbon fill without a full re-render (keeps cursor focus)
+      const tabs = document.querySelectorAll('.tab');
+      const filled = WRITING_TASKS.filter(t => writingAnswers[t.id].trim().length > 0).length;
+      const pct = Math.round((filled / WRITING_TASKS.length) * 100);
+      const lastTab = tabs[tabs.length-1];
+      if(lastTab) lastTab.querySelector('.fill').style.width = pct + "%";
+    });
+  });
+
+  const prevBtn = document.getElementById('prevBtn');
+  if(prevBtn) prevBtn.onclick = () => { currentPage--; window.scrollTo(0,0); renderPage(); };
+  const finishBtn = document.getElementById('finishBtn');
+  if(finishBtn) finishBtn.onclick = () => { submitted = true; window.scrollTo(0,0); renderResults(); };
+}
+
+function levelFor(score){
+  if(score <= 40) return "A1 – low · Headway Beginner, Units 1–7";
+  if(score <= 48) return "A1 – high · Headway Beginner, Units 8–14";
+  if(score <= 56) return "A2 – low · Headway Elementary, Units 1–6";
+  if(score <= 65) return "A2 – high · Headway Elementary, Units 7–12";
+  if(score <= 74) return "B1 – low · Headway Pre-Intermediate, Units 1–6";
+  if(score <= 83) return "B1 – low-medium · Headway Pre-Intermediate, Units 7–12";
+  if(score <= 92) return "B1 – medium-high · Headway Intermediate, Units 1–6";
+  if(score < 100) return "B1 – high · Headway Intermediate, Units 7–12";
+  return "100%! Likely ready for B2 (Headway Upper-Intermediate) or, if the test felt easy, C1 (Headway Advanced)";
+}
+
+function renderResults(){
+  const totalCorrect = Q.reduce((sum,q,i) => sum + (answers[i]===q.answer?1:0), 0);
+  const unanswered = answers.filter(a=>a===null).length;
+
+  if(!resultsSent){
+    resultsSent = true;
+    sendResultsToSheet(totalCorrect);
+  }
+
+  const pageStats = [];
+  for(let p=1;p<=8;p++){
+    const qs = pageQuestions(p);
+    const correct = qs.reduce((sum,q)=> sum + (answers[Q.indexOf(q)]===q.answer?1:0),0);
+    pageStats.push({page:p, correct, of:qs.length});
+  }
+
+  let html = `
+    <header class="top">
+      <div class="brand">Headway · 5th Edition</div>
+      <div class="brand">CEFR Placement Test A</div>
+    </header>
+    <div class="results">
+      <h2>${studentName ? escapeHtml(studentName) + "'s Results" : "Results"}</h2>
+      <p style="color:var(--ink-soft);font-size:14px;">
+        ${unanswered > 0 ? `${unanswered} question${unanswered===1?'':'s'} left unanswered (counted as incorrect).` : "All 100 questions answered."}
+      </p>
+      <div class="score-hero">
+        <div class="num">${totalCorrect}</div>
+        <div class="outof">out of 100</div>
+        <div class="level">${levelFor(totalCorrect)}</div>
+      </div>
+
+      <table class="breakdown">
+        <tr><th>Page</th><th>Score</th><th style="width:40%;">&nbsp;</th></tr>
+        ${pageStats.map(s => `
+          <tr>
+            <td>Page ${s.page}</td>
+            <td>${s.correct} / ${s.of}</td>
+            <td><div class="bar-bg"><div class="bar-fill" style="width:${(s.correct/s.of)*100}%;"></div></div></td>
+          </tr>
+        `).join("")}
+      </table>
+
+      <h3 style="font-size:16px;margin-bottom:10px;">Writing (page 9) — for teacher review</h3>
+      <p style="color:var(--ink-soft);font-size:13px;margin-top:-4px;">Not auto-scored. Read alongside the multiple-choice result to judge fluency and accuracy.</p>
+      ${WRITING_TASKS.map(t => {
+        const resp = writingAnswers[t.id].trim();
+        return `<div class="writing-review">
+          <span class="wtitle">${escapeHtml(t.label)} &middot; ${wordCount(writingAnswers[t.id])} words</span>
+          <div class="wprompt">${escapeHtml(t.prompt)}</div>
+          ${resp ? escapeHtml(resp) : '<span class="wempty">No response written.</span>'}
+        </div>`;
+      }).join("")}
+
+      <h3 style="font-size:16px;margin:22px 0 10px;">Multiple-choice review</h3>
+      ${Q.map((q,i) => {
+        const correct = answers[i]===q.answer;
+        const yourAnswer = answers[i]===null ? "No answer" : `${letters(answers[i])}) ${q.options[answers[i]]}`;
+        return `<div class="review-item ${correct?'right':'wrong'}">
+          <div class="qn">Question ${q.n}</div>
+          <div>${renderStem(q.text)}</div>
+          <div class="your">Your answer: ${escapeHtml(yourAnswer)}</div>
+          ${!correct ? `<div class="correct">Correct answer: ${letters(q.answer)}) ${escapeHtml(q.options[q.answer])}</div>` : ""}
+        </div>`;
+      }).join("")}
+
+      <div class="navbtns" style="justify-content:flex-start;margin-top:24px;gap:12px;">
+        <button id="downloadBtn">Download results (.txt)</button>
+        <button class="ghost" id="copyBtn">Copy summary</button>
+        <button class="ghost" id="retakeBtn">Retake test</button>
+      </div>
+    </div>
+    <footer class="note">
+      Score bands and level guidance are from Oxford's official Headway CEFR Placement Test A answer key (2018).
+    </footer>
+  `;
+  app.innerHTML = html;
+
+  document.getElementById('downloadBtn').onclick = () => {
+    const text = buildSummaryText(totalCorrect);
+    const blob = new Blob([text], {type: "text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(studentName||"student").replace(/\s+/g,"_")}_placement_test_results.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  document.getElementById('copyBtn').onclick = async () => {
+    const text = buildSummaryText(totalCorrect);
+    try{
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(()=> btn.textContent = original, 1500);
+    }catch(e){
+      alert("Couldn't copy automatically — you can select and copy the results manually.");
+    }
+  };
+  document.getElementById('retakeBtn').onclick = () => {
+    answers.fill(null);
+    WRITING_TASKS.forEach(t => writingAnswers[t.id] = "");
+    currentPage = 1;
+    submitted = false;
+    renderIntro();
+  };
+}
+
+function sendResultsToSheet(totalCorrect){
+  if(!SHEET_WEBAPP_URL) return; // auto-collection not configured — silently skip
+  const mcAnswers = Q.map((q,i) => answers[i]===null ? "-" : letters(answers[i])).join("");
+  const payload = {
+    name: studentName || "(no name given)",
+    date: new Date().toISOString(),
+    score: totalCorrect,
+    level: levelFor(totalCorrect),
+    mcAnswers: mcAnswers,
+    writing1: writingAnswers["w1"] || "",
+    writing2: writingAnswers["w2"] || ""
+  };
+  fetch(SHEET_WEBAPP_URL, {
+    method: "POST",
+    mode: "no-cors", // Apps Script web apps don't return CORS headers; we don't need to read the response
+    headers: {"Content-Type": "text/plain"},
+    body: JSON.stringify(payload)
+  }).catch(err => console.warn("Could not send results to sheet:", err));
+}
+
+function buildSummaryText(totalCorrect){
+  const lines = [];
+  lines.push("HEADWAY CEFR PLACEMENT TEST A — RESULTS");
+  lines.push("Test taker: " + (studentName || "(name not given)"));
+  lines.push("Date: " + new Date().toLocaleDateString());
+  lines.push("");
+  lines.push(`Score: ${totalCorrect} / 100`);
+  lines.push(`Level: ${levelFor(totalCorrect)}`);
+  lines.push("");
+  lines.push("--- Multiple-choice answers ---");
+  Q.forEach((q,i) => {
+    const given = answers[i]===null ? "-" : letters(answers[i]);
+    const correct = answers[i]===q.answer ? "correct" : `incorrect (correct: ${letters(q.answer)})`;
+    lines.push(`Q${q.n}: ${given}  — ${correct}`);
+  });
+  lines.push("");
+  lines.push("--- Writing responses ---");
+  WRITING_TASKS.forEach(t => {
+    lines.push(`\n${t.label} (${wordCount(writingAnswers[t.id])} words)`);
+    lines.push(`Prompt: ${t.prompt}`);
+    lines.push(writingAnswers[t.id].trim() || "(no response)");
+  });
+  return lines.join("\n");
+}
+
+renderIntro();
+</script>
+</body>
+</html>
